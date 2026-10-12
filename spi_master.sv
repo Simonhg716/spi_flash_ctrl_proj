@@ -1,7 +1,7 @@
 module spi_master
 #(
     parameter SPI_MODE      = 0     ,
-    parameter CLK_DIV       = 25    ,//SCLK分频数，2-->4分频
+    parameter CLK_DIV       = 25    ,//SCLK分频数，25-->50分频
     parameter DUMMY_CYCLE   = 8     ,//dummy cycle num
     parameter CMD_READ      = 8'h03 ,//supported cmds
     parameter CMD_FAST_READ = 8'h0B ,
@@ -79,8 +79,8 @@ It's not a necessary condition
 But we still keep it in case
   people set the CLK_DIV = 1 
 */
-assign sclk_posedge_pulse = (div_cnt == CLK_DIV-1) && !o_CS_n && !o_sclk;// be about to flip and the current level is low
-assign sclk_negedge_pulse = (div_cnt == CLK_DIV-1) && !o_CS_n &&  o_sclk;//be opposite to above
+assign sclk_posedge_pulse = (div_cnt == CLK_DIV-1) && !o_CS_n && !o_sclk;   // be about to flip meanwhile the current level is low
+assign sclk_negedge_pulse = (div_cnt == CLK_DIV-1) && !o_CS_n &&  o_sclk;   //be opposite to above
 assign sample_edge_pulse  = sclk_posedge_pulse;
 assign shift_edge_pulse   = sclk_negedge_pulse;
 
