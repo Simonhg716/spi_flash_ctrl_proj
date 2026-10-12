@@ -49,8 +49,8 @@ logic        c_done_byte_valid ;
 //instantiation of all modules
 //spi_master
 spi_master #(
-    .SPI_MODE    (0),
-    .CLK_DIV     (2),
+    .SPI_MODE    (0)  ,
+    .CLK_DIV     (25) ,
     .DUMMY_CYCLE (8)
 )spi_flash_master( 
     .i_clk           (i_clk)             ,
