@@ -1,23 +1,7 @@
-/*Description:
-This Module work as master to chip W25Q128
-which support only MODE 0 and MODE 3
-MODE     CPOL     CPHA    sample_edge     shift_edge
- 0        0        0        posedge        negedge
- 3        1        1        posedge        negedge
-The difference is MODE 0 will shift the first bit before its first sampling
-The DATA_RCV MOSI embody this trait
-Also we use DATA_RCV_WAIT to align to the fifo output
-  makes our data more reliable
-
-Sync_FIFO usage for wr_data buffering
-data write,erase
-(PC --> UART_RX --> Master(Wr_sync_fifo) --> Slave)
-
-*/
 module spi_master
 #(
     parameter SPI_MODE      = 0     ,
-    parameter CLK_DIV       = 2     ,//SCLK分频数，2-->4分频
+    parameter CLK_DIV       = 25    ,//SCLK分频数，2-->4分频
     parameter DUMMY_CYCLE   = 8     ,//dummy cycle num
     parameter CMD_READ      = 8'h03 ,//supported cmds
     parameter CMD_FAST_READ = 8'h0B ,
@@ -161,15 +145,19 @@ always_ff @(posedge i_clk or negedge i_rst_n)
 begin
     if(!i_rst_n)
     begin
-        state        <= IDLE ;
-        r_bit_cnt    <= '0   ;
-        cmd_shift_r  <= '0   ;
-        addr_shift_r <= '0   ;
-        rd_bytes_cnt <= '0   ;
-        r_addr       <= '0   ;
-        r_cmd        <= '0   ;
-        r_len        <= '0   ;
-        rd_en        <= '0   ;
+        state           <= IDLE ;
+        r_bit_cnt       <= '0   ;
+        cmd_shift_r     <= '0   ;
+        addr_shift_r    <= '0   ;
+        rd_shift_r      <= '0   ;
+        wr_shift_r      <= '0   ;
+        rd_bytes_cnt    <= '0   ;
+        r_addr          <= '0   ;
+        r_cmd           <= '0   ;
+        r_len           <= '0   ;
+        rd_en           <= '0   ;
+        o_rd_byte       <= '0   ;
+        o_rd_byte_valid <= '0   ;
     end
     else
     begin
@@ -224,6 +212,10 @@ begin
                     begin
                         state <= DATA_RD ;
                     end
+                    else if(r_cmd == 8'h06)
+                    begin
+                        state <= DONE ;
+                    end
                     else
                     begin
                         state        <= ADDR_SD ;
@@ -251,8 +243,8 @@ begin
                 end
                 else
                 begin
-                    r_bit_cnt    <= r_bit_cnt + 1'b1     ;
-                    addr_shift_r <= addr_shift_r << 1    ;
+                    r_bit_cnt <= r_bit_cnt + 1'b1     ;
+                    addr_shift_r <= addr_shift_r << 1 ;
                 end
             end
             DUMMY:
